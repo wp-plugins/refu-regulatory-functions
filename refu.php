@@ -1,44 +1,15 @@
 <?php
 /*
 Plugin Name: Functions
+Plugin URI: http://wordpress.org/plugins/refu-regulatory-functions/
 Description: Alternative <code>functions.php</code>  file of wordpress themes.
-
-With this plug-in you have support to:
-* Custom_URL_LoginLogo
-* Custom_ALT_text_LoginLogo
-* Custom_social_fields
-* New uploads files types
-* Custom_foter_text_admin_panel
-* Canonical_Permalinks
-* Support_Twitter_oEmbed
-* Color according to different input state
-* Paypal support
-* Disable self trackbacks
-* Pdf support to the WordPress media manager
-
-All this (and more)  without having to use other plug-in that lower performance of your wordpress blog
-
-Version: 2.0.1
 Author: abr4xas
-Author URI: http://abr4xas.org/refu/
+Version: 2.0.2
+Author URI: http://abr4xas.org
 License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
 */
 
-// Custom_Avatar_and_Logo
-function custom_loginlogo() {
-echo '<style type="text/css">
-h1 a {background-image: url('.get_bloginfo('template_directory').'/images/login_logo.png) !important; }
-</style>';
-}
-add_action('login_head', 'custom_loginlogo');
-
-add_filter( 'avatar_defaults', 'newgravatar' );
-
-function newgravatar ($avatar_defaults) {
-$myavatar = get_bloginfo('template_directory') . '/images/gravatar.gif';
-$avatar_defaults[$myavatar] = "Name of new gravatar";
-return $avatar_defaults;
-}
 
 // Custom feed link
 function custom_feed_link($output, $feed) {
@@ -83,19 +54,6 @@ function my_login_head() {
 	}
 	</style>
 	";
-}
-
-// Custom_URL_LoginLogo
-add_action( 'login_headerurl', 'my_custom_login_url' );
-function my_custom_login_url() {
-return 'put your URL here';
-}
-
-// Custom_ALT_text_LoginLogo
-add_action("login_headertitle","my_custom_login_title");
-function my_custom_login_title()
-{
-return 'Change this';
 }
 
 // Custom_social_fields
@@ -176,20 +134,6 @@ function remove_feed_generator() {
 }
 add_filter('the_generator', 'remove_feed_generator');
 
-// Paypal Donation Shortcode
-// Just add [donate]Make a donation[/donate] or [donate] where you want to display donation link on post or widget
-function donate_shortcode( $atts, $content = null) {
-	global $post;extract(shortcode_atts(array(
-		'account' => 'your-paypal-email-address',
-		'for' => $post->post_title,
-		'onHover' => '',
-	), $atts));
-	if(empty($content)) $content='Make A Donation';
-		return '<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business='.$account.'&item_name=Donation for '.$for.'" title="'.$onHover.'">'.$content.'</a>';
-}
-add_shortcode('donate', 'donate_shortcode');
-add_filter('widget_text', 'do_shortcode');
-
 // Disable self trackbacks
 function disable_self_ping( &$links ) {
     foreach ( $links as $l => $link )
@@ -197,3 +141,21 @@ function disable_self_ping( &$links ) {
             unset($links[$l]);
 }
 add_action( 'pre_ping', 'disable_self_ping' );
+
+// Opengraph for posts
+function opg_post() {
+    if ( is_singular() ) {
+        global $post;
+        setup_postdata( $post );
+        $output = '<meta property="og:type" content="article" />' . "\n";
+        $output .= '<meta property="og:title" content="' . esc_attr( get_the_title() ) . '" />' . "\n";
+        $output .= '<meta property="og:url" content="' . get_permalink() . '" />' . "\n";
+        $output .= '<meta property="og:description" content="' . esc_attr( get_the_excerpt() ) . '" />' . "\n";
+        if ( has_post_thumbnail() ) {
+            $imgsrc = wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), 'medium' );
+            $output .= '<meta property="og:image" content="' . $imgsrc[0] . '" />' . "\n";
+        }
+        echo $output;
+    }
+}
+add_action( 'wp_head', 'opg_post' );
