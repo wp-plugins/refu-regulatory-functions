@@ -1,20 +1,27 @@
 <?php
 /*
 Plugin Name: Functions
-Plugin URI: http://wordpress.org/plugins/refu-regulatory-functions/
 Description: Alternative <code>functions.php</code>  file of wordpress themes.
-Author: abr4xas
-Version: 2.0.2
-Author URI: http://abr4xas.org
+Contributors: abr4xas
+Donate link: http://abr4xas.org/refu
+Tags: functions
+Version: 3.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 */
 
 
+// custom var
+
+$url_feed = 'Put your feed url here';
+
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+
 // Custom feed link
 function custom_feed_link($output, $feed) {
 
-$feed_url = 'Put your feed url here';
+$feed_url = $url_feed;
 
 $feed_array = array('rss' => $feed_url, 'rss2' => $feed_url, 'atom' => $feed_url, 'rdf' => $feed_url, 'comments_rss2' => '');
 $feed_array[$feed] = $feed_url;
@@ -25,7 +32,7 @@ return $output;
 
 function other_feed_links($link) {
 
-$link = 'Put your feed url here';
+$link = $url_feed;
 return $link;
 
 }
@@ -42,18 +49,17 @@ wp_oembed_add_provider( 'http://www.slideshare.net/*', 'http://api.embed.ly/v1/a
 }
 add_action('init','oembed_slideshare');
 
-// Custom_LoginLogo
-add_action("login_head", "my_login_head");
-function my_login_head() {
-	echo "
-	<style>
-	body.login #login h1 a {
-		background: url('".get_bloginfo('template_url')."/images/awloginlogo.png') no-repeat scroll center top transparent;
-		height: 135px;
-		width: 135px;
-	}
-	</style>
-	";
+// Custom_URL_LoginLogo
+add_action( 'login_headerurl', 'my_custom_login_url' );
+function my_custom_login_url() {
+return site_url();
+}
+
+// Custom_ALT_text_LoginLogo
+add_action("login_headertitle","my_custom_login_title");
+function my_custom_login_title()
+{
+return get_bloginfo ( 'description' );
 }
 
 // Custom_social_fields
@@ -77,13 +83,11 @@ add_filter('user_contactmethods','add_redessociales_contactmethod',10,1);
 	 $mimes = array_merge ( $mimes , array (
 		 'pages|numbers|key' => 'application/octet-stream'
 	 ) ) ;
-
 	 return $mimes ;
  }
-
 // Custom_foter_text_admin_panel
 function remove_footer_admin () {
-    echo "Change this";
+    echo get_bloginfo ( 'description' );
 }
 
 add_filter('admin_footer_text', 'remove_footer_admin');
@@ -103,20 +107,6 @@ function twitter_oembed($a) {
 	$a['#http(s)?://(www\.)?twitter.com/.+?/status(es)?/.*#i'] = array( 'http://api.twitter.com/1/statuses/oembed.{format}', true);
 	return $a;
 }
-
-// Color according to different post state
-function posts_status_color() {
-?>
-  <style>
-  .status-draft { background: #FCE3F2 !important; }
-  .status-pending { background: #87C5D6 !important; }
-  .status-future { background: #C6EBF5 !important; }
-  .status-private { background: #F2D46F; }
-  </style>
-<?php
-}
-add_action('admin_footer','posts_status_color');
-
 //Send the result when only one is in a search
 function single_result() {
   if(is_search()) {
@@ -142,6 +132,11 @@ function disable_self_ping( &$links ) {
 }
 add_action( 'pre_ping', 'disable_self_ping' );
 
+function disableAutoSave(){
+    wp_deregister_script('autosave');
+}
+add_action( 'wp_print_scripts', 'disableAutoSave' );
+
 // Opengraph for posts
 function opg_post() {
     if ( is_singular() ) {
@@ -159,3 +154,4 @@ function opg_post() {
     }
 }
 add_action( 'wp_head', 'opg_post' );
+?>
